@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A browser-based identity, access and workforce administration portal.">
+  <title>Entra Workforce Portal</title>
+  <style>
+    :root {
+      --blue: #0f6cbd;
+      --blue-hover: #115ea3;
+      --blue-light: #ebf3fc;
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --surface-alt: #fafafa;
+      --text: #242424;
+      --muted: #616161;
+      --border: #d1d1d1;
+      --danger: #c50f1f;
+      --danger-bg: #fde7e9;
+      --success: #107c10;
+      --warning: #8a6d00;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .12);
+      --radius: 6px;
+      --sidebar-width: 260px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { color-scheme: light; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: #0f6cbd;
+      color: #fff;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand { font-size: 16px; font-weight: 600; }
+    .topbar-spacer { flex: 1; }
+    .tenant { color: #fff; opacity: .9; font-size: 13px; }
+    .menu-button {
+      display: none;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 4px;
+      color: #fff;
+      background: transparent;
+      font-size: 20px;
+    }
+    .menu-button:hover { background: rgba(255, 255, 255, .12); }
+
+    .layout { display: flex; min-height: calc(100vh - 48px); }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      flex: 0 0 var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 14px 8px;
+    }
+
+    .nav-section-title {
+      padding: 12px 12px 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .nav-button {
+      width: 100%;
+      min-height: 38px;
+      display: flex;
+      align-items: centre;
+      gap: 10px;
+      margin: 2px 0;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+    }
+    .nav-button:hover { background: #f0f0f0; }
+    .nav-button.active {
+      background: var(--blue-light);
+      color: #0f548c;
+      font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+    .nav-icon { width: 22px; text-align: centre; font-size: 16px; }
+
+    main { flex: 1; min-width: 0; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    h1 { margin: 0 0 4px; font-size: 26px; font-weight: 600; }
+    h2 { margin: 0 0 14px; font-size: 18px; font-weight: 600; }
+    h3 { margin: 0 0 10px; font-size: 15px; }
+    p { line-height: 1.5; }
+    .subtitle { margin: 0; color: var(--muted); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(170px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .stat-card, .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .stat-card { padding: 18px; }
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { margin-top: 7px; font-size: 28px; font-weight: 600; }
+    .card { margin-bottom: 18px; padding: 18px; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: centre;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .toolbar .search { min-width: 230px; flex: 1; }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-weight: 600; }
+    input, select {
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 10px;
+      border: 1px solid #8a8886;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+    }
+    input:focus, select:focus { border-color: var(--blue); }
+    .help { color: var(--muted); font-size: 12px; }
+
+    .button {
+      min-height: 34px;
+      padding: 6px 13px;
+      border: 1px solid #8a8886;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .button:hover { background: #f3f2f1; }
+    .button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .button.primary:hover { background: var(--blue-hover); }
+    .button.danger { border-color: var(--danger); color: var(--danger); }
+    .button.danger:hover { background: var(--danger-bg); }
+    .button.small { min-height: 29px; padding: 4px 9px; font-size: 12px; }
+    .button:disabled { cursor: not-allowed; opacity: .5; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid #e5e5e5; text-align: left; vertical-align: middle; }
+    th { background: #fafafa; color: #424242; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    tbody tr:hover { background: #f7f9fb; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #e8e8e8;
+      color: #424242;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .badge.success { background: #dff6dd; color: #0e700e; }
+    .badge.danger { background: #fde7e9; color: #a4262c; }
+    .badge.info { background: #deecf9; color: #004578; }
+
+    .empty { padding: 28px; color: var(--muted); text-align: centre; }
+    .notice {
+      padding: 11px 13px;
+      border-left: 4px solid var(--blue);
+      background: var(--blue-light);
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+      min-width: 250px;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 12px 14px;
+      border-radius: 4px;
+      background: #323130;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: .18s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .settings-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .sidebar {
+        position: fixed;
+        inset: 48px auto 0 0;
+        z-index: 30;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+        box-shadow: 4px 0 12px rgba(0,0,0,.18);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .menu-button { display: inline-flex; align-items: centre; justify-content: centre; }
+    }
+
+    @media (max-width: 620px) {
+      main { padding: 16px 12px; }
+      .field-grid, .stats-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; }
+      .tenant { display: none; }
+      .toolbar .search { min-width: 100%; }
+    }
+
+
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: centre;
+      padding: 20px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(91, 168, 255, .92) 0 9%, transparent 9.3%),
+        radial-gradient(circle at 82% 78%, rgba(36, 118, 205, .72) 0 17%, transparent 17.3%),
+        linear-gradient(135deg, #061f3d 0%, #0f6cbd 46%, #76b7f2 100%);
+    }
+    .login-screen[hidden] { display: none; }
+    .login-card {
+      width: min(420px, 100%);
+      padding: 32px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, .18);
+    }
+    .login-logo {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: centre;
+      margin-bottom: 18px;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .login-card h1 { font-size: 24px; }
+    .login-card .field { margin-top: 14px; }
+    .login-card .button { width: 100%; margin-top: 18px; }
+    .login-error { min-height: 20px; margin: 10px 0 0; color: var(--danger); font-size: 13px; }
+    .login-note {
+      margin-top: 18px;
+      padding: 10px;
+      border-radius: 4px;
+      background: var(--blue-light);
+      color: #0f548c;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .signed-in-user { color: #fff; font-size: 13px; }
+    .topbar-logout {
+      min-height: 30px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255,255,255,.65);
+      border-radius: 4px;
+      background: transparent;
+      color: #fff;
+      font-weight: 600;
+    }
+    .topbar-logout:hover { background: rgba(255,255,255,.12); }
+
+
+    .login-screen::before,
+    .login-screen::after {
+      content: "";
+      position: absolute;
+      border-radius: 42% 58% 65% 35% / 36% 40% 60% 64%;
+      pointer-events: none;
+      filter: blur(.2px);
+    }
+    .login-screen::before {
+      width: 460px;
+      height: 460px;
+      left: -190px;
+      bottom: -230px;
+      background: linear-gradient(145deg, rgba(255,255,255,.28), rgba(81,170,255,.08));
+      transform: rotate(25deg);
+    }
+    .login-screen::after {
+      width: 340px;
+      height: 340px;
+      right: -120px;
+      top: -135px;
+      border: 55px solid rgba(255,255,255,.13);
+      transform: rotate(-18deg);
+    }
+    .login-card {
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(255,255,255,.72);
+      box-shadow: 0 24px 70px rgba(0, 27, 61, .35);
+    }
+    .password-result {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      display: grid;
+      place-items: centre;
+      padding: 20px;
+      background: rgba(0, 20, 43, .58);
+    }
+    .password-result[hidden] { display: none; }
+    .password-dialog {
+      width: min(460px, 100%);
+      padding: 24px;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .temporary-password {
+      margin: 14px 0;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #f5f5f5;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      overflow-wrap: anywhere;
+    }
+
+  </style>
+</head>
+<body>
+
+  <section id="loginScreen" class="login-screen" aria-labelledby="loginTitle">
+    <form id="loginForm" class="login-card">
+      <div class="login-logo" aria-hidden="true">E</div>
+      <h1 id="loginTitle">Sign in</h1>
+      <p class="subtitle">Entra Workforce Portal</p>
+      <div class="field">
+        <label for="loginUsername">Username</label>
+        <input id="loginUsername" autocomplete="username" required maxlength="80" placeholder="Enter Username">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required maxlength="128" placeholder="Enter password">
+      </div>
+      <p id="loginError" class="login-error" role="alert" aria-live="polite"></p>
+      <button class="button primary" type="submit">Sign in</button>
+      </div>
+    </form>
+  </section>
+
+  <header class="topbar">
+    <button id="menuButton" class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <div class="brand">Entra Workforce Portal</div>
+    <div class="topbar-spacer"></div>
+    <div class="tenant">Contoso Workforce Tenant</div>
+    <div id="signedInUser" class="signed-in-user"></div>
+    <button id="logoutButton" class="topbar-logout" type="button">Sign out</button>
+  </header>
+
+  <div class="layout">
+    <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+      <div class="nav-section-title">Overview</div>
+      <button class="nav-button active" type="button" data-page="dashboard"><span class="nav-icon">⌂</span>Dashboard</button>
+      <div class="nav-section-title">Identity</div>
+      <button class="nav-button" type="button" data-page="users"><span class="nav-icon">♙</span>Users</button>
+      <button class="nav-button" type="button" data-page="groups"><span class="nav-icon">♟</span>Groups</button>
+      <button class="nav-button" type="button" data-page="licences"><span class="nav-icon">▣</span>Licences</button>
+      <button class="nav-button" type="button" data-page="roles"><span class="nav-icon">★</span>Roles</button>
+      <div class="nav-section-title">Monitoring</div>
+      <button class="nav-button" type="button" data-page="attendance"><span class="nav-icon">◷</span>Check in/out</button>
+      <button class="nav-button" type="button" data-page="signins"><span class="nav-icon">↪</span>Sign-in logs</button>
+      <button class="nav-button" type="button" data-page="audit"><span class="nav-icon">≡</span>Audit logs</button>
+      <div class="nav-section-title">System</div>
+      <button class="nav-button" type="button" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+    </aside>
+
+    <main>
+      <section id="dashboard" class="page active">
+        <div class="page-header"><div><h1>Dashboard</h1><p class="subtitle">Identity overview for the Contoso workforce tenant.</p></div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total users</div><div id="statUsers" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Enabled users</div><div id="statEnabled" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Disabled users</div><div id="statDisabled" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Groups</div><div id="statGroups" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Assigned licences</div><div id="statLicences" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Today's sign-ins</div><div id="statSignins" class="stat-value">0</div></div>
+        </div>
+        <div class="card"><h2>Recent activity</h2><div id="recentActivity"></div></div>
+      </section>
+
+      <section id="users" class="page">
+        <div class="page-header"><div><h1>Users</h1><p class="subtitle">Create and manage workforce identities.</p></div></div>
+        <div class="card">
+          <h2>Create user</h2>
+          <form id="userForm">
+            <div class="field-grid">
+              <div class="field"><label for="displayName">Display name</label><input id="displayName" maxlength="80" required placeholder="e.g. Alex Tan"></div>
+              <div class="field"><label for="userEmail">User principal name</label><input id="userEmail" type="email" maxlength="120" required placeholder="alex@contoso.com"></div>
+              <div class="field"><label for="userRole">Directory role</label><select id="userRole"><option>Standard User</option><option>Global Administrator</option><option>User Administrator</option><option>Groups Administrator</option></select></div>
+              <div class="field"><label for="userLicence">Licence</label><select id="userLicence"><option value="">No licence</option><option>Microsoft 365 E3</option><option>Microsoft 365 E5</option><option>Business Premium</option></select></div>
+              <div class="field"><label for="newUserPassword">Initial password</label><input id="newUserPassword" type="password" minlength="3" maxlength="128" required placeholder="e.g. User123!"><span class="help">The user can sign in with their email address and this password.</span></div>
+            </div>
+            <div class="form-actions"><button class="button primary" type="submit">Create user</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="toolbar"><input id="userSearch" class="search" type="search" placeholder="Search by name, email, role or licence" aria-label="Search users"><button id="seedUsersButton" class="button" type="button">Add sample users</button></div>
+          <div id="usersTable"></div>
+        </div>
+      </section>
+
+      <section id="groups" class="page">
+        <div class="page-header"><div><h1>Groups</h1><p class="subtitle">Create groups and manage memberships.</p></div></div>
+        <div class="card">
+          <h2>Create group</h2>
+          <form id="groupForm">
+            <div class="field-grid">
+              <div class="field"><label for="groupName">Group name</label><input id="groupName" maxlength="80" required placeholder="e.g. IT Support"></div>
+              <div class="field"><label for="groupType">Group type</label><select id="groupType"><option>Security</option><option>Microsoft 365</option></select></div>
+            </div>
+            <div class="form-actions"><button class="button primary" type="submit">Create group</button></div>
+          </form>
+        </div>
+        <div class="card"><h2>Assign membership</h2><form id="membershipForm"><div class="field-grid"><div class="field"><label for="memberUser">User</label><select id="memberUser"></select></div><div class="field"><label for="memberGroup">Group</label><select id="memberGroup"></select></div></div><div class="form-actions"><button id="assignMemberButton" class="button primary" type="submit">Assign user</button></div></form></div>
+        <div class="card"><div id="groupsTable"></div></div>
+      </section>
+
+      <section id="licences" class="page">
+        <div class="page-header"><div><h1>Licences</h1><p class="subtitle">Review licence allocation.</p></div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Microsoft 365 E3</div><div id="licenceE3" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Microsoft 365 E5</div><div id="licenceE5" class="stat-value">0</div></div>
+          <div class="stat-card"><div class="stat-label">Business Premium</div><div id="licenceBP" class="stat-value">0</div></div>
+        </div>
+        <div class="card"><h2>Assignments</h2><div id="licencesTable"></div></div>
+      </section>
+
+      <section id="roles" class="page">
+        <div class="page-header"><div><h1>Roles</h1><p class="subtitle">Review users assigned to administrative roles.</p></div></div>
+        <div class="card"><div id="rolesTable"></div></div>
+      </section>
+
+
+      <section id="attendance" class="page">
+        <div class="page-header"><div><h1>Check in/out</h1><p class="subtitle">Record attendance for the currently signed-in account.</p></div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Current status</div><div id="attendanceStatus" class="stat-value">Checked out</div></div>
+          <div class="stat-card"><div class="stat-label">Last check-in</div><div id="lastCheckIn" class="stat-value" style="font-size:18px">—</div></div>
+          <div class="stat-card"><div class="stat-label">Time in current session</div><div id="currentSessionTime" class="stat-value" style="font-size:18px">—</div></div>
+        </div>
+        <div class="card">
+          <h2>Attendance action</h2>
+          <p id="attendanceIdentity" class="subtitle"></p>
+          <div class="form-actions" style="justify-content:flex-start">
+            <button id="checkInButton" class="button primary" type="button">Check in</button>
+            <button id="checkOutButton" class="button danger" type="button">Check out</button>
+          </div>
+        </div>
+        <div class="card"><h2>My attendance history</h2><div id="myAttendanceTable"></div></div>
+        <div id="allAttendanceCard" class="card"><div class="toolbar"><h2 style="margin:0;flex:1">All attendance records</h2><button id="exportAttendanceCsvButton" class="button" type="button">Export attendance CSV</button><button id="exportAttendanceButton" class="button" type="button">Export attendance JSON</button></div><div id="allAttendanceTable"></div></div>
+      </section>
+
+      <section id="signins" class="page">
+        <div class="page-header"><div><h1>Sign-in logs</h1><p class="subtitle">Authentication events.</p></div></div>
+        <div class="card"><div class="toolbar"><select id="signInUser" aria-label="User for sign-in event"></select><select id="signInStatus" aria-label="Sign-in result"><option>Success</option><option>Failure</option></select><button id="recordSignInButton" class="button primary" type="button">Record sign-in</button></div><div id="signinsTable"></div></div>
+      </section>
+
+      <section id="audit" class="page">
+        <div class="page-header"><div><h1>Audit logs</h1><p class="subtitle">A local history of administrative actions.</p></div></div>
+        <div class="card"><div class="toolbar"><button id="clearAuditButton" class="button danger" type="button">Clear audit logs</button></div><div id="auditTable"></div></div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="page-header"><div><h1>Settings</h1><p class="subtitle">Manage the data stored by this portal.</p></div></div>
+        <div class="card"><h2>User database JSON</h2><p>Export or import user accounts, including password hashes. Imported users can sign in using their existing passwords.</p><div class="settings-row"><button id="exportUsersButton" class="button" type="button">Export users JSON</button><label class="button" for="importUsersInput" style="display:inline-flex;align-items:center;">Import users JSON</label><input id="importUsersInput" type="file" accept="application/json,.json" hidden></div></div>
+        <div class="card"><h2>Full data management</h2><p>Export a complete backup, import an earlier backup, or reset the portal.</p><div class="settings-row"><button id="exportButton" class="button" type="button">Export JSON</button><label class="button" for="importInput" style="display:inline-flex;align-items:center;">Import JSON</label><input id="importInput" type="file" accept="application/json,.json" hidden><button id="resetButton" class="button danger" type="button">Reset all data</button></div></div>
+
+        <div class="card">
+          <h2>Portal login</h2>
+          <p>The account is held in this browser. You can change the local username and password, or download the account record as a JSON file.</p>
+          <form id="accountForm">
+            <div class="field-grid">
+              <div class="field"><label for="accountUsername">Username</label><input id="accountUsername" required maxlength="80"></div>
+              <div class="field"><label for="accountPassword">New password</label><input id="accountPassword" type="password" minlength="8" maxlength="128" placeholder="Leave blank to retain current password"></div>
+            </div>
+            <div class="form-actions"><button id="downloadAccountButton" class="button" type="button">Download account file</button><button class="button primary" type="submit">Save login</button></div>
+          </form>
+        </div>
+        <div class="card"><h2>Storage</h2><p id="storageStatus">Checking LocalStorage…</p></div>
+      </section>
+    </main>
+  </div>
+
+  <section id="passwordResult" class="password-result" hidden aria-labelledby="passwordResultTitle" role="dialog" aria-modal="true">
+    <div class="password-dialog">
+      <h2 id="passwordResultTitle">Temporary password created</h2>
+      <p id="passwordResultUser" class="subtitle"></p>
+      <div id="temporaryPassword" class="temporary-password"></div>
+      <p class="help">Copy this password now. For safety, it will not be shown again after this window is closed.</p>
+      <div class="form-actions">
+        <button id="copyPasswordButton" class="button" type="button">Copy password</button>
+        <button id="closePasswordButton" class="button primary" type="button">Done</button>
+      </div>
+    </div>
+  </section>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'entraLabPortal.v2';
+    const AUTH_KEY = 'entraLabPortal.auth.v1';
+    const SESSION_KEY = 'entraLabPortal.session.v1';
+    const ROLE_OPTIONS = ['Standard User', 'Global Administrator', 'User Administrator', 'Groups Administrator'];
+    const LICENCE_OPTIONS = ['', 'Microsoft 365 E3', 'Microsoft 365 E5', 'Business Premium'];
+    let state = { users: [], groups: [], signIns: [], attendance: [], audit: [] };
+    let toastTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+    const uid = (prefix) => prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    const nowISO = () => new Date().toISOString();
+    const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const formatDate = (value) => new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+
+    function isToday(value) {
+      const d = new Date(value), n = new Date();
+      return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+    }
+
+    function showToast(message) {
+      const toast = $('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function addAudit(action, target, details = '') {
+      state.audit.unshift({ id: uid('audit'), time: nowISO(), action, target, details });
+      state.audit = state.audit.slice(0, 500);
+    }
+
+    function sanitiseState(raw) {
+      const safe = raw && typeof raw === 'object' ? raw : {};
+      return {
+        users: Array.isArray(safe.users) ? safe.users.map(u => ({
+          id: String(u.id || uid('user')),
+          name: String(u.name || 'Unnamed user').slice(0, 80),
+          email: String(u.email || '').slice(0, 120),
+          role: ROLE_OPTIONS.includes(u.role) ? u.role : 'Standard User',
+          licence: LICENCE_OPTIONS.includes(u.licence) ? u.licence : '',
+          enabled: u.enabled !== false,
+          groups: Array.isArray(u.groups) ? u.groups.map(String) : [],
+          created: u.created || nowISO(),
+          passwordHash: String(u.passwordHash || ''),
+          passwordResetAt: u.passwordResetAt || null,
+          mustChangePassword: u.mustChangePassword === true
+        })) : [],
+        groups: Array.isArray(safe.groups) ? safe.groups.map(g => ({
+          id: String(g.id || uid('group')),
+          name: String(g.name || 'Unnamed group').slice(0, 80),
+          type: ['Security', 'Microsoft 365'].includes(g.type) ? g.type : 'Security',
+          created: g.created || nowISO()
+        })) : [],
+        attendance: Array.isArray(safe.attendance) ? safe.attendance.slice(0, 2000).map(a => ({
+          id: String(a.id || uid('attendance')), accountId: String(a.accountId || ''),
+          accountType: a.accountType === 'admin' ? 'admin' : 'user',
+          name: String(a.name || 'Unknown'), username: String(a.username || ''),
+          action: a.action === 'out' ? 'out' : 'in', time: a.time || nowISO()
+        })) : [],
+        signIns: Array.isArray(safe.signIns) ? safe.signIns.slice(0, 500).map(s => ({
+          id: String(s.id || uid('signin')),
+          userId: String(s.userId || ''),
+          userName: String(s.userName || 'Unknown user'),
+          email: String(s.email || ''),
+          status: s.status === 'Failure' ? 'Failure' : 'Success',
+          time: s.time || nowISO(),
+          app: String(s.app || 'Microsoft 365 portal')
+        })) : [],
+        audit: Array.isArray(safe.audit) ? safe.audit.slice(0, 500).map(a => ({
+          id: String(a.id || uid('audit')),
+          time: a.time || nowISO(), action: String(a.action || ''),
+          target: String(a.target || ''), details: String(a.details || '')
+        })) : []
+      };
+    }
+
+
+    function hashPassword(value) {
+      // Creates a local password digest for account matching.
+      let hash = 2166136261;
+      for (let i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0).toString(16).padStart(8, '0');
+    }
+
+    function getAuth() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(AUTH_KEY));
+        if (saved && saved.username && saved.passwordHash) return saved;
+      } catch (error) { console.error(error); }
+      const initial = { username: 'admin', passwordHash: hashPassword('Admin123!'), created: nowISO() };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(initial));
+      return initial;
+    }
+
+    function getSession() {
+      try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); }
+      catch (error) { return null; }
+    }
+
+    function setLoginVisibility() {
+      const auth = getAuth();
+      const session = getSession();
+      const signedIn = !!(session && session.type && session.username);
+      $('loginScreen').hidden = signedIn;
+      $('signedInUser').textContent = signedIn ? session.displayName + ' · ' + (session.type === 'admin' ? 'Administrator' : 'User') : '';
+      $('accountUsername').value = auth.username;
+      document.querySelectorAll('.nav-button').forEach(button => {
+        const adminOnly = ['users','groups','licences','roles','audit','settings'].includes(button.dataset.page);
+        button.hidden = signedIn && session.type !== 'admin' && adminOnly;
+      });
+      $('seedUsersButton').hidden = signedIn && session.type !== 'admin';
+      if (signedIn && session.type !== 'admin') navigate('dashboard');
+      if (!signedIn) setTimeout(() => $('loginUsername').focus(), 0);
+    }
+
+    function downloadJSONFile(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        state = saved ? sanitiseState(JSON.parse(saved)) : sanitiseState(null);
+      } catch (error) {
+        console.error(error);
+        state = sanitiseState(null);
+        showToast('Saved data could not be read. A new workspace was created.');
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        $('storageStatus').textContent = 'LocalStorage is active. Data is saved automatically in this browser.';
+      } catch (error) {
+        console.error(error);
+        $('storageStatus').textContent = 'LocalStorage is unavailable or full. Changes may not persist.';
+        showToast('Unable to save to LocalStorage.');
+      }
+    }
+
+    function persist(message) { saveState(); renderAll(); if (message) showToast(message); }
+
+    function empty(message) { return '<div class="empty">' + escapeHTML(message) + '</div>'; }
+
+    function renderDashboard() {
+      $('statUsers').textContent = state.users.length;
+      $('statEnabled').textContent = state.users.filter(u => u.enabled).length;
+      $('statDisabled').textContent = state.users.filter(u => !u.enabled).length;
+      $('statGroups').textContent = state.groups.length;
+      $('statLicences').textContent = state.users.filter(u => u.licence).length;
+      $('statSignins').textContent = state.signIns.filter(s => isToday(s.time)).length;
+      const recent = state.audit.slice(0, 6);
+      $('recentActivity').innerHTML = recent.length ? '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Action</th><th>Target</th></tr></thead><tbody>' + recent.map(a => '<tr><td>' + escapeHTML(formatDate(a.time)) + '</td><td>' + escapeHTML(a.action) + '</td><td>' + escapeHTML(a.target) + '</td></tr>').join('') + '</tbody></table></div>' : empty('No activity yet. Create a user or group to begin.');
+    }
+
+    function renderUsers() {
+      const query = $('userSearch').value.trim().toLowerCase();
+      const users = state.users.filter(u => [u.name, u.email, u.role, u.licence].join(' ').toLowerCase().includes(query));
+      $('usersTable').innerHTML = users.length ? '<div class="table-wrap"><table><thead><tr><th>Name</th><th>User principal name</th><th>Status</th><th>Role</th><th>Licence</th><th>Groups</th><th>Actions</th></tr></thead><tbody>' + users.map(u => '<tr><td><strong>' + escapeHTML(u.name) + '</strong></td><td>' + escapeHTML(u.email) + '</td><td><span class="badge ' + (u.enabled ? 'success' : 'danger') + '">' + (u.enabled ? 'Enabled' : 'Disabled') + '</span></td><td>' + escapeHTML(u.role) + '</td><td>' + escapeHTML(u.licence || 'None') + '</td><td>' + escapeHTML(u.groups.length ? u.groups.length : '0') + '</td><td><div class="actions"><button class="button small" type="button" data-action="toggle-user" data-id="' + escapeHTML(u.id) + '">' + (u.enabled ? 'Disable' : 'Enable') + '</button><button class="button small" type="button" data-action="edit-user" data-id="' + escapeHTML(u.id) + '">Edit</button><button class="button small" type="button" data-action="reset-password" data-id="' + escapeHTML(u.id) + '">Reset password</button><button class="button small danger" type="button" data-action="delete-user" data-id="' + escapeHTML(u.id) + '">Delete</button></div></td></tr>').join('') + '</tbody></table></div>' : empty(query ? 'No users match your search.' : 'No users have been created.');
+    }
+
+    function renderSelects() {
+      const userOptions = state.users.map(u => '<option value="' + escapeHTML(u.id) + '">' + escapeHTML(u.name + ' (' + u.email + ')') + '</option>').join('');
+      $('memberUser').innerHTML = userOptions || '<option value="">No users available</option>';
+      $('signInUser').innerHTML = userOptions || '<option value="">No users available</option>';
+      $('memberGroup').innerHTML = state.groups.map(g => '<option value="' + escapeHTML(g.id) + '">' + escapeHTML(g.name) + '</option>').join('') || '<option value="">No groups available</option>';
+      $('assignMemberButton').disabled = !state.users.length || !state.groups.length;
+      $('recordSignInButton').disabled = !state.users.length;
+    }
+
+    function renderGroups() {
+      $('groupsTable').innerHTML = state.groups.length ? '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Members</th><th>Created</th><th>Actions</th></tr></thead><tbody>' + state.groups.map(g => {
+        const count = state.users.filter(u => u.groups.includes(g.id)).length;
+        return '<tr><td><strong>' + escapeHTML(g.name) + '</strong></td><td><span class="badge info">' + escapeHTML(g.type) + '</span></td><td>' + count + '</td><td>' + escapeHTML(formatDate(g.created)) + '</td><td><button class="button small danger" type="button" data-action="delete-group" data-id="' + escapeHTML(g.id) + '">Delete</button></td></tr>';
+      }).join('') + '</tbody></table></div>' : empty('No groups have been created.');
+    }
+
+    function renderLicences() {
+      $('licenceE3').textContent = state.users.filter(u => u.licence === 'Microsoft 365 E3').length;
+      $('licenceE5').textContent = state.users.filter(u => u.licence === 'Microsoft 365 E5').length;
+      $('licenceBP').textContent = state.users.filter(u => u.licence === 'Business Premium').length;
+      const licensed = state.users.filter(u => u.licence);
+      $('licencesTable').innerHTML = licensed.length ? '<div class="table-wrap"><table><thead><tr><th>User</th><th>User principal name</th><th>Licence</th></tr></thead><tbody>' + licensed.map(u => '<tr><td>' + escapeHTML(u.name) + '</td><td>' + escapeHTML(u.email) + '</td><td><span class="badge info">' + escapeHTML(u.licence) + '</span></td></tr>').join('') + '</tbody></table></div>' : empty('No licences are assigned.');
+    }
+
+    function renderRoles() {
+      const admins = state.users.filter(u => u.role !== 'Standard User');
+      $('rolesTable').innerHTML = admins.length ? '<div class="table-wrap"><table><thead><tr><th>User</th><th>User principal name</th><th>Directory role</th><th>Status</th></tr></thead><tbody>' + admins.map(u => '<tr><td>' + escapeHTML(u.name) + '</td><td>' + escapeHTML(u.email) + '</td><td><span class="badge info">' + escapeHTML(u.role) + '</span></td><td><span class="badge ' + (u.enabled ? 'success' : 'danger') + '">' + (u.enabled ? 'Enabled' : 'Disabled') + '</span></td></tr>').join('') + '</tbody></table></div>' : empty('No administrative roles are assigned.');
+    }
+
+    function getAttendanceAccount() {
+      const session = getSession();
+      if (!session) return null;
+      return {
+        id: session.type === 'admin' ? 'admin:' + session.username.toLowerCase() : session.userId,
+        type: session.type,
+        name: session.displayName,
+        username: session.username
+      };
+    }
+
+    function accountAttendance(account) {
+      return account ? state.attendance.filter(a => a.accountId === account.id).sort((a,b) => new Date(b.time) - new Date(a.time)) : [];
+    }
+
+    function durationText(milliseconds) {
+      if (!Number.isFinite(milliseconds) || milliseconds < 0) return '—';
+      const minutes = Math.floor(milliseconds / 60000);
+      const hours = Math.floor(minutes / 60);
+      const remainder = minutes % 60;
+      return hours ? hours + ' hr ' + remainder + ' min' : remainder + ' min';
+    }
+
+    function renderAttendance() {
+      const account = getAttendanceAccount();
+      if (!account) return;
+      const records = accountAttendance(account);
+      const latest = records[0];
+      const checkedIn = !!latest && latest.action === 'in';
+      $('attendanceStatus').textContent = checkedIn ? 'Checked in' : 'Checked out';
+      $('attendanceStatus').style.color = checkedIn ? 'var(--success)' : 'var(--muted)';
+      $('attendanceIdentity').textContent = account.name + ' (' + account.username + ')';
+      $('checkInButton').disabled = checkedIn;
+      $('checkOutButton').disabled = !checkedIn;
+      const lastIn = records.find(r => r.action === 'in');
+      $('lastCheckIn').textContent = lastIn ? formatDate(lastIn.time) : '—';
+      $('currentSessionTime').textContent = checkedIn ? durationText(Date.now() - new Date(latest.time).getTime()) : '—';
+      $('myAttendanceTable').innerHTML = records.length ? '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Action</th></tr></thead><tbody>' + records.map(r => '<tr><td>' + escapeHTML(formatDate(r.time)) + '</td><td><span class="badge ' + (r.action === 'in' ? 'success' : 'info') + '">' + (r.action === 'in' ? 'Check in' : 'Check out') + '</span></td></tr>').join('') + '</tbody></table></div>' : empty('No attendance records yet.');
+      const isAdmin = account.type === 'admin';
+      $('allAttendanceCard').hidden = !isAdmin;
+      if (isAdmin) {
+        $('allAttendanceTable').innerHTML = state.attendance.length ? '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Name</th><th>Username</th><th>Account</th><th>Action</th></tr></thead><tbody>' + state.attendance.map(r => '<tr><td>' + escapeHTML(formatDate(r.time)) + '</td><td>' + escapeHTML(r.name) + '</td><td>' + escapeHTML(r.username) + '</td><td>' + escapeHTML(r.accountType === 'admin' ? 'Administrator' : 'User') + '</td><td><span class="badge ' + (r.action === 'in' ? 'success' : 'info') + '">' + (r.action === 'in' ? 'Check in' : 'Check out') + '</span></td></tr>').join('') + '</tbody></table></div>' : empty('No attendance records yet.');
+      }
+    }
+
+    function renderSignIns() {
+      $('signinsTable').innerHTML = state.signIns.length ? '<div class="table-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Application</th><th>Status</th></tr></thead><tbody>' + state.signIns.map(s => '<tr><td>' + escapeHTML(formatDate(s.time)) + '</td><td><strong>' + escapeHTML(s.userName) + '</strong><br><span class="help">' + escapeHTML(s.email) + '</span></td><td>' + escapeHTML(s.app) + '</td><td><span class="badge ' + (s.status === 'Success' ? 'success' : 'danger') + '">' + escapeHTML(s.status) + '</span></td></tr>').join('') + '</tbody></table></div>' : empty('No sign-in events have been recorded.');
+    }
+
+    function renderAudit() {
+      $('auditTable').innerHTML = state.audit.length ? '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Activity</th><th>Target</th><th>Details</th></tr></thead><tbody>' + state.audit.map(a => '<tr><td>' + escapeHTML(formatDate(a.time)) + '</td><td>' + escapeHTML(a.action) + '</td><td>' + escapeHTML(a.target) + '</td><td>' + escapeHTML(a.details || '—') + '</td></tr>').join('') + '</tbody></table></div>' : empty('No audit events are available.');
+    }
+
+    function renderAll() { renderDashboard(); renderUsers(); renderSelects(); renderGroups(); renderLicences(); renderRoles(); renderAttendance(); renderSignIns(); renderAudit(); }
+
+    function navigate(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === pageId));
+      document.querySelectorAll('.nav-button').forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
+      $('sidebar').classList.remove('open');
+      $('menuButton').setAttribute('aria-expanded', 'false');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.nav-button').forEach(button => button.addEventListener('click', () => navigate(button.dataset.page)));
+    $('menuButton').addEventListener('click', () => {
+      const open = $('sidebar').classList.toggle('open');
+      $('menuButton').setAttribute('aria-expanded', String(open));
+    });
+
+    $('userForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = $('displayName').value.trim();
+      const email = $('userEmail').value.trim().toLowerCase();
+      const initialPassword = $('newUserPassword').value;
+      if (!name || !email || initialPassword.length < 3) return showToast('Enter a name, valid email and password of at least 3 characters.');
+      if (state.users.some(u => u.email.toLowerCase() === email)) return showToast('A user with that email address already exists.');
+      const user = { id: uid('user'), name, email, role: $('userRole').value, licence: $('userLicence').value, enabled: true, groups: [], created: nowISO(), passwordHash: hashPassword(initialPassword), passwordResetAt: nowISO(), mustChangePassword: false };
+      state.users.push(user);
+      addAudit('Create user', user.name, user.email + '; sign-in enabled');
+      event.target.reset();
+      persist('User created.');
+    });
+
+    $('groupForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = $('groupName').value.trim();
+      if (!name) return showToast('Enter a group name.');
+      if (state.groups.some(g => g.name.toLowerCase() === name.toLowerCase())) return showToast('A group with that name already exists.');
+      const group = { id: uid('group'), name, type: $('groupType').value, created: nowISO() };
+      state.groups.push(group);
+      addAudit('Create group', group.name, group.type);
+      event.target.reset();
+      persist('Group created.');
+    });
+
+    $('membershipForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const user = state.users.find(u => u.id === $('memberUser').value);
+      const group = state.groups.find(g => g.id === $('memberGroup').value);
+      if (!user || !group) return showToast('Create both a user and group first.');
+      if (user.groups.includes(group.id)) return showToast('That user is already a member of the group.');
+      user.groups.push(group.id);
+      addAudit('Add group member', group.name, user.name);
+      persist('User assigned to group.');
+    });
+
+    $('userSearch').addEventListener('input', renderUsers);
+
+    $('usersTable').addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const user = state.users.find(u => u.id === button.dataset.id);
+      if (!user) return;
+      if (button.dataset.action === 'toggle-user') {
+        user.enabled = !user.enabled;
+        addAudit(user.enabled ? 'Enable user' : 'Disable user', user.name, user.email);
+        persist('User status updated.');
+      } else if (button.dataset.action === 'edit-user') {
+        const role = prompt('Directory role:\n' + ROLE_OPTIONS.join('\n'), user.role);
+        if (role === null) return;
+        if (!ROLE_OPTIONS.includes(role.trim())) return showToast('Role was not recognised. Use one of the listed values.');
+        const licence = prompt('Licence (leave blank for none):\nMicrosoft 365 E3\nMicrosoft 365 E5\nBusiness Premium', user.licence);
+        if (licence === null) return;
+        if (!LICENCE_OPTIONS.includes(licence.trim())) return showToast('Licence was not recognised.');
+        user.role = role.trim(); user.licence = licence.trim();
+        addAudit('Update user', user.name, 'Role or licence changed');
+        persist('User updated.');
+      } else if (button.dataset.action === 'reset-password') {
+        const temporaryPassword = generateTemporaryPassword();
+        user.passwordHash = hashPassword(temporaryPassword);
+        user.passwordResetAt = nowISO();
+        user.mustChangePassword = true;
+        addAudit('Reset user password', user.name, 'Temporary password issued; change required at next sign-in');
+        saveState();
+        renderAll();
+        showTemporaryPassword(user, temporaryPassword);
+      } else if (button.dataset.action === 'delete-user') {
+        if (!confirm('Delete ' + user.name + '? This also removes the user from all groups.')) return;
+        state.users = state.users.filter(u => u.id !== user.id);
+        addAudit('Delete user', user.name, user.email);
+        persist('User deleted.');
+      }
+    });
+
+    $('groupsTable').addEventListener('click', event => {
+      const button = event.target.closest('button[data-action="delete-group"]');
+      if (!button) return;
+      const group = state.groups.find(g => g.id === button.dataset.id);
+      if (!group || !confirm('Delete the group ' + group.name + '?')) return;
+      state.groups = state.groups.filter(g => g.id !== group.id);
+      state.users.forEach(u => { u.groups = u.groups.filter(id => id !== group.id); });
+      addAudit('Delete group', group.name, group.type);
+      persist('Group deleted.');
+    });
+
+    $('recordSignInButton').addEventListener('click', () => {
+      const user = state.users.find(u => u.id === $('signInUser').value);
+      if (!user) return showToast('Create a user first.');
+      let status = $('signInStatus').value;
+      if (!user.enabled) status = 'Failure';
+      state.signIns.unshift({ id: uid('signin'), userId: user.id, userName: user.name, email: user.email, status, time: nowISO(), app: 'Microsoft 365 portal' });
+      state.signIns = state.signIns.slice(0, 500);
+      addAudit('Record sign-in', user.name, status + (user.enabled ? '' : ' (account disabled)'));
+      persist('Sign-in event recorded.');
+    });
+
+    $('clearAuditButton').addEventListener('click', () => {
+      if (!state.audit.length) return showToast('There are no audit logs to clear.');
+      if (!confirm('Clear all audit logs?')) return;
+      state.audit = [];
+      saveState(); renderAll(); showToast('Audit logs cleared.');
+    });
+
+    $('seedUsersButton').addEventListener('click', () => {
+      const samples = [
+        { name: 'Aisha Rahman', email: 'aisha@contoso.com', role: 'Global Administrator', licence: 'Microsoft 365 E5' },
+        { name: 'Daniel Wong', email: 'daniel@contoso.com', role: 'User Administrator', licence: 'Microsoft 365 E3' },
+        { name: 'Mei Lin', email: 'meilin@contoso.com', role: 'Standard User', licence: 'Business Premium' }
+      ];
+      let added = 0;
+      samples.forEach(s => {
+        if (!state.users.some(u => u.email === s.email)) {
+          state.users.push({ id: uid('user'), ...s, enabled: true, groups: [], created: nowISO(), passwordHash: hashPassword('User123!'), passwordResetAt: nowISO(), mustChangePassword: false });
+          added++;
+        }
+      });
+      addAudit('Add sample data', 'Users', added + ' user(s) added; sample password User123!');
+      persist(added ? added + ' sample users added. Password: User123!' : 'Sample users already exist.');
+    });
+
+    function recordAttendance(action) {
+      const account = getAttendanceAccount();
+      if (!account) return showToast('Sign in first.');
+      const records = accountAttendance(account);
+      const currentlyIn = records.length && records[0].action === 'in';
+      if (action === 'in' && currentlyIn) return showToast('You are already checked in.');
+      if (action === 'out' && !currentlyIn) return showToast('You are already checked out.');
+      state.attendance.unshift({ id: uid('attendance'), accountId: account.id, accountType: account.type, name: account.name, username: account.username, action, time: nowISO() });
+      state.attendance = state.attendance.slice(0, 2000);
+      addAudit(action === 'in' ? 'Attendance check-in' : 'Attendance check-out', account.name, account.username);
+      persist(action === 'in' ? 'Checked in successfully.' : 'Checked out successfully.');
+    }
+
+    $('checkInButton').addEventListener('click', () => recordAttendance('in'));
+    $('checkOutButton').addEventListener('click', () => recordAttendance('out'));
+    function csvCell(value) {
+      const text = String(value ?? '');
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    $('exportAttendanceCsvButton').addEventListener('click', () => {
+      const headers = ['Record ID', 'Date and time', 'Name', 'Username', 'Account type', 'Action'];
+      const rows = state.attendance.map(record => [
+        record.id,
+        formatDate(record.time),
+        record.name,
+        record.username,
+        record.accountType === 'admin' ? 'Administrator' : 'User',
+        record.action === 'in' ? 'Check in' : 'Check out'
+      ]);
+      const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'entra-workforce-attendance-' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Attendance CSV exported.');
+    });
+
+    $('exportAttendanceButton').addEventListener('click', () => {
+      downloadJSONFile({ format: 'Entra Workforce Portal attendance', version: 1, exportedAt: nowISO(), attendance: state.attendance }, 'entra-workforce-attendance-' + new Date().toISOString().slice(0,10) + '.json');
+      showToast('Attendance JSON exported.');
+    });
+
+    $('exportUsersButton').addEventListener('click', () => {
+      downloadJSONFile({
+        format: 'Entra Workforce Portal users',
+        version: 1,
+        exportedAt: nowISO(),
+        users: state.users
+      }, 'entra-portal-users-' + new Date().toISOString().slice(0, 10) + '.json');
+      showToast('Users JSON exported.');
+    });
+
+    $('importUsersInput').addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        if (!parsed || !Array.isArray(parsed.users)) throw new Error('Missing users array');
+        const imported = sanitiseState({ users: parsed.users }).users;
+        let added = 0, updated = 0;
+        imported.forEach(incoming => {
+          const existingIndex = state.users.findIndex(u => u.email.toLowerCase() === incoming.email.toLowerCase());
+          if (existingIndex >= 0) { state.users[existingIndex] = incoming; updated++; }
+          else { state.users.push(incoming); added++; }
+        });
+        addAudit('Import users JSON', file.name, added + ' added; ' + updated + ' updated');
+        persist('Users imported: ' + added + ' added, ' + updated + ' updated.');
+      } catch (error) {
+        console.error(error);
+        showToast('Invalid users JSON. Export a users file from this portal first.');
+      } finally { event.target.value = ''; }
+    });
+
+    $('exportButton').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'entra-portal-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      showToast('Backup exported.');
+    });
+
+    $('importInput').addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        state = sanitiseState(parsed);
+        addAudit('Import backup', file.name, 'JSON data imported');
+        persist('Backup imported.');
+      } catch (error) {
+        console.error(error); showToast('The selected file is not a valid portal backup.');
+      } finally { event.target.value = ''; }
+    });
+
+    $('resetButton').addEventListener('click', () => {
+      if (!confirm('Reset all users, groups, sign-ins and logs? This cannot be undone unless you exported a backup.')) return;
+      state = sanitiseState(null);
+      saveState(); renderAll(); showToast('All portal data was reset.');
+    });
+
+
+
+    function generateTemporaryPassword() {
+      const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      const lower = 'abcdefghijkmnopqrstuvwxyz';
+      const digits = '23456789';
+      const symbols = '!@#$%';
+      const all = upper + lower + digits + symbols;
+      const random = max => {
+        if (window.crypto && crypto.getRandomValues) {
+          const values = new Uint32Array(1);
+          crypto.getRandomValues(values);
+          return values[0] % max;
+        }
+        return Math.floor(Math.random() * max);
+      };
+      const chars = [upper[random(upper.length)], lower[random(lower.length)], digits[random(digits.length)], symbols[random(symbols.length)]];
+      while (chars.length < 14) chars.push(all[random(all.length)]);
+      for (let i = chars.length - 1; i > 0; i--) {
+        const j = random(i + 1);
+        [chars[i], chars[j]] = [chars[j], chars[i]];
+      }
+      return chars.join('');
+    }
+
+    function showTemporaryPassword(user, password) {
+      $('passwordResultUser').textContent = 'User: ' + user.name + ' (' + user.email + ')';
+      $('temporaryPassword').textContent = password;
+      $('passwordResult').hidden = false;
+      $('copyPasswordButton').focus();
+    }
+
+    $('loginForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const auth = getAuth();
+      const username = $('loginUsername').value.trim().toLowerCase();
+      const password = $('loginPassword').value;
+      let session = null;
+      if (username === auth.username.toLowerCase() && hashPassword(password) === auth.passwordHash) {
+        session = { type: 'admin', username: auth.username, displayName: auth.username };
+      } else {
+        const user = state.users.find(u => u.enabled && u.email.toLowerCase() === username && u.passwordHash && hashPassword(password) === u.passwordHash);
+        if (user) {
+          session = { type: 'user', username: user.email, displayName: user.name, userId: user.id };
+          state.signIns.unshift({ id: uid('signin'), userId: user.id, userName: user.name, email: user.email, status: 'Success', time: nowISO(), app: 'Entra Workforce Portal' });
+          addAudit('User sign-in', user.name, 'Interactive sign-in succeeded');
+          saveState();
+        }
+      }
+      if (session) {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        $('loginError').textContent = '';
+        $('loginPassword').value = '';
+        renderAll();
+        setLoginVisibility();
+        showToast('Signed in successfully.');
+      } else {
+        $('loginError').textContent = 'The username or password is incorrect, or the account is disabled.';
+      }
+    });
+
+    $('logoutButton').addEventListener('click', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      $('loginUsername').value = '';
+      $('loginPassword').value = '';
+      setLoginVisibility();
+    });
+
+
+    $('copyPasswordButton').addEventListener('click', async () => {
+      const password = $('temporaryPassword').textContent;
+      try {
+        await navigator.clipboard.writeText(password);
+        showToast('Temporary password copied.');
+      } catch (error) {
+        console.error(error);
+        showToast('Clipboard access was blocked. Select and copy the password manually.');
+      }
+    });
+
+    $('closePasswordButton').addEventListener('click', () => {
+      $('passwordResult').hidden = true;
+      $('temporaryPassword').textContent = '';
+    });
+
+    $('accountForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const oldAuth = getAuth();
+      const username = $('accountUsername').value.trim();
+      const password = $('accountPassword').value;
+      if (!username) return showToast('Enter a username.');
+      if (password && password.length < 8) return showToast('The password must contain at least 8 characters.');
+      const updated = {
+        username,
+        passwordHash: password ? hashPassword(password) : oldAuth.passwordHash,
+        created: oldAuth.created,
+        updated: nowISO()
+      };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ type: 'admin', username, displayName: username }));
+      $('accountPassword').value = '';
+      addAudit('Update portal login', username, password ? 'Username and password changed' : 'Username changed');
+      persist('Login details updated.');
+      setLoginVisibility();
+    });
+
+    $('downloadAccountButton').addEventListener('click', () => {
+      const auth = getAuth();
+      downloadJSONFile({
+        format: 'Entra Workforce Portal local account',
+        username: auth.username,
+        passwordHash: auth.passwordHash,
+        created: auth.created,
+        updated: auth.updated || null,
+        warning: 'This file does not contain the plain-text password. Keep it private.'
+      }, 'entra-portal-account.json');
+      showToast('Account file downloaded.');
+    });
+
+    loadState();
+    renderAll();
+    saveState();
+    setLoginVisibility();
+    setInterval(() => { if (!$('attendance').hidden && $('attendance').classList.contains('active')) renderAttendance(); }, 60000);
+  </script>
+</body>
+</html>
